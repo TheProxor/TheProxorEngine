@@ -12,12 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NuklearDotNet\NuklearDotNet.csproj" />
     <ProjectReference Include="..\SDL\SDL.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="SharpGL">
-      <HintPath>SharpGL.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\SharpGL\SharpGL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

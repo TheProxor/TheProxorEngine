@@ -13,7 +13,7 @@ using SharpGL;
 using SharpGL.Shaders;
 using SharpGL.VertexBuffers;
 
-namespace ProxorEditor.GUI.GUI_Contexts
+namespace EngineEditor.GUI.GUI_Contexts
 {
     internal class GL_Texture
     {
@@ -59,9 +59,11 @@ namespace ProxorEditor.GUI.GUI_Contexts
 
 
         private NkVertex[] Verts;
+
+        private NkVector2f[] positions;
+
         private ushort[] Inds;
 
-        private Vector2 scale;
         private float[] ortho = new float[16];
 
 
@@ -104,7 +106,7 @@ namespace ProxorEditor.GUI.GUI_Contexts
 
                                                 void main(void) {
 	                                                out_Color = pass_Color * texture(inTex, pass_UV);
-                                                   
+                                                   //out_Color = vec4(1, 0, 0, 1) * texture(inTex, pass_UV);
                                                 }
                                                 ";
 
@@ -121,7 +123,6 @@ namespace ProxorEditor.GUI.GUI_Contexts
             gl = new OpenGL();
 
             gl.Enable(OpenGL.GL_TEXTURE_2D);
-            gl.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
             shaderProgram = new ShaderProgram();
             shaderProgram.Create(gl, VERTEX_SHADER, FRAGMENT_SHADER, null); 
@@ -153,7 +154,7 @@ namespace ProxorEditor.GUI.GUI_Contexts
                 0.0f, 0.0f,-1.0f, 0.0f,
                 -1.0f,1.0f, 0.0f, 1.0f,
             };
-            /* setup global state */
+     
             gl.Viewport(0, 0, window.DisplayWidth, window.DisplayHeight);
             gl.Enable(OpenGL.GL_BLEND);
             gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
@@ -176,11 +177,13 @@ namespace ProxorEditor.GUI.GUI_Contexts
             return new GL_Texture(gl, W, H, Data);
         }
 
-
-        public override void SetBuffer(NkVertex[] VertexBuffer, ushort[] IndexBuffer)
+        private IntPtr rawData;
+        public override void SetBuffer(NkVertex[] VertexBuffer,  ushort[] IndexBuffer, IntPtr rawData)
         {
             Verts = VertexBuffer;
             Inds = IndexBuffer;
+
+            this.rawData = rawData;
         }
 
         public override void BeginRender()
@@ -196,10 +199,6 @@ namespace ProxorEditor.GUI.GUI_Contexts
         public void BeginBuffering()
         {
             gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, framebuffers[0]);
-           // byte[] data = new byte[window.DisplayWidth * window.DisplayHeight * 4];
-           // RenderTexture = new IntPtr();
-           // gl.ReadPixels(0, 0, window.DisplayWidth, window.DisplayHeight, OpenGL.GL_RGBA, OpenGL.GL_UNSIGNED_INT_8_8_8_8, data);
-           // Marshal.Copy(data, 0, RenderTexture, data.Length);
         }
 
 
@@ -218,18 +217,23 @@ namespace ProxorEditor.GUI.GUI_Contexts
                 uvs[i * 2] = V.UV.X;
                 uvs[i * 2 + 1] = V.UV.Y;
 
-                NkColorF colorf = V.GetColorF;
-                colors[i * 4] = colorf.R;
-                colors[i * 4 + 1] = colorf.G;
-                colors[i * 4 + 2] = colorf.B;
-                colors[i * 4 + 3] = colorf.A;
+                NkColor color = V.Color;
+                colors[i * 4] = color.R;
+                colors[i * 4 + 1] = color.G;
+                colors[i * 4 + 2] = color.B;
+                colors[i * 4 + 3] = color.A;
             }
+
 
 
             var vertexDataBuffer = new VertexBuffer();
             vertexDataBuffer.Create(gl);
             vertexDataBuffer.Bind(gl);
-            vertexDataBuffer.SetData(gl, 0, vert, false, 2);
+
+         
+            vertexDataBuffer.SetDataV2F(gl, 0, rawData, NkVertex.SIZE * (int)Count, false, 3);
+
+        //    vertexDataBuffer.SetData(gl, 0, vert, false, 2);
 
             var colourDataBuffer = new VertexBuffer();
             colourDataBuffer.Create(gl);
@@ -247,24 +251,20 @@ namespace ProxorEditor.GUI.GUI_Contexts
             gl.DrawArrays(OpenGL.GL_TRIANGLES, 0, (int)Count);
 
             vertexDataBuffer.Unbind(gl);
-            colourDataBuffer.Unbind(gl);
-            uvDataBuffer.Unbind(gl);
+          //  colourDataBuffer.Unbind(gl);
+          //  uvDataBuffer.Unbind(gl);
         }
 
 
         public void EndBuffering()
         {
-         
+            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
         }
 
         public override void EndRender()
         {
             gl.Disable(OpenGL.GL_SCISSOR_TEST);
-
-            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
-
-            //vertexBufferArray.Unbind(gl);
-            //shaderProgram.Unbind(gl);
+           
         }
 
         public void DisplayRT()
@@ -331,6 +331,12 @@ namespace ProxorEditor.GUI.GUI_Contexts
         {
             DisplayRT();
             SDL.SDL_GL_SwapWindow(window.Handle);
+        }
+
+        ~GL_GUI_Context()
+        {
+            vertexBufferArray.Unbind(gl);
+            shaderProgram.Unbind(gl);
         }
     }
 }

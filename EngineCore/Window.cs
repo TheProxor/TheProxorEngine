@@ -15,9 +15,10 @@ using System.Numerics;
 using SDL2;
 using NuklearDotNet;
 
-using ProxorEditor.GUI.GUI_Contexts;
+using EngineEditor.GUI.GUI_Contexts;
+using EngineCore.Input;
 
-namespace ProxorEditor.GUI
+namespace EngineEditor.GUI
 {
     public enum Mode : uint
     {
@@ -28,14 +29,7 @@ namespace ProxorEditor.GUI
 
     public static class Conversions
     {
-        public static NkVertex NkVertexToScreenSpace(this NkVertex nkVertex, Window window)
-        {
-            return new NkVertex(
-                new NkVector2f((nkVertex.Position.X / window.Width) * 2 - 1, (nkVertex.Position.Y / window.Height) * 2 - 1),
-                nkVertex.UV,
-                nkVertex.ColorF
-                ); 
-        }
+      
     }
 
     public sealed class Window
@@ -71,23 +65,20 @@ namespace ProxorEditor.GUI
             this.Width = width;
             this.Height = height;
             this.Mode = mode;
-            this.Title = title;
+            this.Title = title;         
         }
 
         public Vector2 AspectRatio                    { get; private set; }
 
-        event Action OnMouseDown;
-        event Action OnMouseMove;
+
         public void Open()
         {
-            SDL.SDL_SetHint(SDL.SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
-            SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
             Handle = SDL.SDL_CreateWindow(Title, 40, 40, Width, Height, (SDL.SDL_WindowFlags)Mode | SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
             SDL.SDL_SetWindowResizable(Handle, SDL.SDL_bool.SDL_FALSE);
             SDL.SDL_GL_GetDrawableSize(Handle, out DisplayWidth, out DisplayHeight);
             AspectRatio = new Vector2((float)Width / Height, (float)Height / Width);
-            SDL.SDL_Event sdlEvent;
 
+            SDL.SDL_Event sdlEvent;
             CurrentWindowState = WindowState.Open;
 
             var Dev = new GL_GUI_Context(this, Width, Height);

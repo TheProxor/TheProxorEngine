@@ -14,10 +14,10 @@ namespace NuklearDotNet {
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct NkColor {
-		public byte R;
-		public byte G;
-		public byte B;
-		public byte A;
+		public float R;
+		public float G;
+		public float B;
+		public float A;
 
 		public NkColor(byte R, byte G, byte B, byte A = 255) {
 			this.R = R;
@@ -29,6 +29,8 @@ namespace NuklearDotNet {
 		public override string ToString() {
 			return string.Format("({0}, {1}, {2}, {3})", R, G, B, A);
 		}
+
+		public const int SIZE = sizeof(float) * 4; 
 	}
 
     public struct NkColorF

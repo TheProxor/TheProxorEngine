@@ -4,7 +4,7 @@ using System.Text;
 
 using NuklearDotNet;
 
-namespace ProxorEditor
+namespace EngineEditor
 {
     public static class Shared
     {
@@ -37,10 +37,6 @@ namespace ProxorEditor
                if (CalcB.Open)
                     CalcB.Calculator();
 
-                const NkPanelFlags Flags = NkPanelFlags.Background;
-                NuklearAPI.Window("Test Window 2", 0, 0, 1920, 1080, Flags, () => {
-                    
-                });
 
                 TestWindow(0, 350);
                 ConsoleThing(450, 200, ConsoleBuffer, InputBuffer);

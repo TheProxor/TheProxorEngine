@@ -179,19 +179,21 @@ namespace NuklearDotNet {
 					NkVertex[] NkVerts = new NkVertex[(int)Vertices->needed / sizeof(NkVertex)];
 					NkVertex* VertsPtr = (NkVertex*)Vertices->memory.ptr;
 
-					for (int i = 0; i < NkVerts.Length; i++) {
-						//NkVertex* V = &VertsPtr[i];
-						//NkVerts[i] = new NkVertex() { Position = new NkVector2f() { X = (int)V->Position.X, Y = (int)V->Position.Y }, Color = V->Color, UV = V->UV };
+					NkVector2f[] positions = new NkVector2f[NkVerts.Length];
 
+					for (int i = 0; i < NkVerts.Length; i++)
+					{ 
 						NkVerts[i] = VertsPtr[i];
 					}
+
+
 
 					ushort[] NkIndices = new ushort[(int)Indices->needed / sizeof(ushort)];
 					ushort* IndicesPtr = (ushort*)Indices->memory.ptr;
 					for (int i = 0; i < NkIndices.Length; i++)
 						NkIndices[i] = IndicesPtr[i];
 
-					Dev.SetBuffer(NkVerts, NkIndices);
+					Dev.SetBuffer(NkVerts, NkIndices, Vertices->memory.ptr);
 					FrameBuffered?.BeginBuffering();
 
 					uint Offset = 0;
@@ -473,6 +475,8 @@ namespace NuklearDotNet {
 		public static implicit operator NkVector2f(Vector2 V) {
 			return new NkVector2f(V.X, V.Y);
 		}
+
+		public const int SIZE = sizeof(float) * 2;
 	}
 
 	/*[StructLayout(LayoutKind.Sequential)]
@@ -485,33 +489,25 @@ namespace NuklearDotNet {
 	}*/
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct NkVertex {
+	public  struct NkVertex {
 		public NkVector2f Position;
 		public NkVector2f UV;
 		public NkColor Color;
-        public NkColorF ColorF;
 
-        public NkColorF GetColorF => new NkColorF(Color.R / (float)byte.MaxValue, Color.G / (float)byte.MaxValue, Color.B / (float)byte.MaxValue, Color.A / (float)byte.MaxValue);
+		
 
         public NkVertex(NkVector2f position, NkVector2f uv, NkColor color)
         {
             Position = position;
             UV = uv;
             Color = color;
-            ColorF = new NkColorF(Color.R / (float)byte.MaxValue, Color.G / (float)byte.MaxValue, Color.B / (float)byte.MaxValue, Color.A / (float)byte.MaxValue);
-        }
-
-        public NkVertex(NkVector2f position, NkVector2f uv, NkColorF color)
-        {
-            Position = position;
-            UV = uv;
-            ColorF = color;
-            Color = new NkColor((byte)(ColorF.R * byte.MaxValue), (byte)(ColorF.G * byte.MaxValue), (byte)(ColorF.B * byte.MaxValue), (byte)(ColorF.A * byte.MaxValue));
         }
 
         public override string ToString() {
 			return string.Format("Position: {0}; UV: {1}; Color: {2}", Position, UV, Color);
 		}
+
+		public const int SIZE = NkVector2f.SIZE * 2 + NkColor.SIZE;
 	}
 
 	public struct NuklearEvent {
@@ -549,7 +545,7 @@ namespace NuklearDotNet {
 	public unsafe abstract class NuklearDevice {
 		internal Queue<NuklearEvent> Events;
 
-		public abstract void SetBuffer(NkVertex[] VertexBuffer, ushort[] IndexBuffer);
+		public abstract void SetBuffer(NkVertex[] VertexBuffer, ushort[] IndexBuffer, IntPtr rawData);
 		public abstract void Render(NkHandle Userdata, int Texture, NkRect ClipRect, uint Offset, uint Count);
 		public abstract int CreateTextureHandle(int W, int H, IntPtr Data);
 
